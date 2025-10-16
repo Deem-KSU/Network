@@ -88,7 +88,7 @@ class ClientHandler implements Runnable {
                         break;
 
                     default:
-                        out.println("Unknown command. Try: RESERVE, FIND, EXIT."); 
+                        out.println("Unknown command. Try: RESERVE, FIND, SHOW ALL TRAINS, EXIT."); 
                         break;
                 }
             }
@@ -104,4 +104,5 @@ class ClientHandler implements Runnable {
             System.out.println("Client disconnected.");
         }
     }
+
 }
