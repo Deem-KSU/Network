@@ -1,0 +1,36 @@
+import java.util.ArrayList;
+
+public class Train {
+    private String id;
+    private String source;
+    private String destination;
+    private ArrayList<Ticket> tickets = new ArrayList<>();
+
+    public Train(String id, String source, String destination) {
+        this.id = id;
+        this.source = source;
+        this.destination = destination;
+        generateTickets();
+    }
+
+    private void generateTickets() {
+        // لكل يوم 7 أيام
+        for (int day = 1; day <= 7; day++) {
+            // 5 تذاكر فيرست
+            for (int i = 1; i <= 5; i++) {
+                String tid = id + "-D" + day + "-F" + i;
+                tickets.add(new Ticket(tid, id, "first", day));
+            }
+            // 5 تذاكر إكونومي
+            for (int i = 1; i <= 5; i++) {
+                String tid = id + "-D" + day + "-E" + i;
+                tickets.add(new Ticket(tid, id, "economy", day));
+            }
+        }
+    }
+
+    public String getId() { return id; }
+    public String getSource() { return source; }
+    public String getDestination() { return destination; }
+    public ArrayList<Ticket> getTickets() { return tickets; }
+}
