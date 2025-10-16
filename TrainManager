@@ -1,0 +1,56 @@
+import java.util.ArrayList;
+
+public class TrainManager {
+    private ArrayList<Train> trains = new ArrayList<>();
+
+    public TrainManager() {
+        initializeTrains();
+    }
+
+    private void initializeTrains() {
+        trains.add(new Train("T1", "Riyadh", "Dammam"));
+        trains.add(new Train("T2", "Riyadh", "Jeddah"));
+        trains.add(new Train("T3", "Riyadh", "Mecca"));
+        trains.add(new Train("T4", "Dammam", "Riyadh"));
+        trains.add(new Train("T5", "Jeddah", "Tabuk"));
+        trains.add(new Train("T6", "Mecca", "Medina"));
+        trains.add(new Train("T7", "Dammam", "Jeddah"));
+        trains.add(new Train("T8", "Medina", "Riyadh"));
+        trains.add(new Train("T9", "Tabuk", "Riyadh"));
+        trains.add(new Train("T10", "Jeddah", "Riyadh"));
+        System.out.println("✅ All 10 trains initialized with tickets!");
+    }
+
+    // البحث عن التذاكر المتاحة حسب المدن واليوم والفئة
+    public ArrayList<Ticket> findAvailableTickets(String source, String destination, int day, String classType) {
+        ArrayList<Ticket> available = new ArrayList<>();
+        for (Train t : trains) {
+            if (t.getSource().equalsIgnoreCase(source) && t.getDestination().equalsIgnoreCase(destination)) {
+                for (Ticket ticket : t.getTickets()) {
+                    if (ticket.getDay() == day && 
+                        ticket.getClassType().equalsIgnoreCase(classType) &&
+                        !ticket.isReserved()) {
+                        available.add(ticket);
+                    }
+                }
+            }
+        }
+        return available;
+    }
+
+    // تنفيذ الحجز
+    public boolean reserveTicket(String ticketId) {
+        for (Train t : trains) {
+            for (Ticket ticket : t.getTickets()) {
+                if (ticket.getTicketId().equalsIgnoreCase(ticketId)) {
+                    if (!ticket.isReserved()) {
+                        ticket.reserve();
+                        return true;
+                    }
+                    return false;
+                }
+            }
+        }
+        return false;
+    }
+}
