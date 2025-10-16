@@ -83,7 +83,7 @@ class ClientHandler implements Runnable {
                         break;
                         
                     case "SHOW_ALL_TRAINS":
-                        ArrayList<Ticket> available = TrainManager.;
+                      
                         
                         break;
 
@@ -106,5 +106,6 @@ class ClientHandler implements Runnable {
     }
 
 }
+
 
 
