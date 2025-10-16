@@ -18,7 +18,7 @@ public class TrainManager {
         trains.add(new Train("T8", "Medina", "Riyadh"));
         trains.add(new Train("T9", "Tabuk", "Riyadh"));
         trains.add(new Train("T10", "Jeddah", "Riyadh"));
-        System.out.println("✅ All 10 trains initialized with tickets!");
+      
     }
 
     // البحث عن التذاكر المتاحة حسب المدن واليوم والفئة
