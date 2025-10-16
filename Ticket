@@ -1,0 +1,28 @@
+public class Ticket {
+    private String ticketId;    // مثال: T1-D3-F1
+    private String trainId;
+    private String classType;   // "first" أو "economy"
+    private int day;            // 1 إلى 7
+    private boolean reserved;   // false = متاحة ، true = محجوزة
+
+    public Ticket(String ticketId, String trainId, String classType, int day) {
+        this.ticketId = ticketId;
+        this.trainId = trainId;
+        this.classType = classType;
+        this.day = day;
+        this.reserved = false;
+    }
+
+    public String getTicketId() { return ticketId; }
+    public String getTrainId() { return trainId; }
+    public String getClassType() { return classType; }
+    public int getDay() { return day; }
+    public boolean isReserved() { return reserved; }
+
+    public void reserve() { this.reserved = true; }
+
+    @Override
+    public String toString() {
+        return ticketId + " (" + classType + ", Day " + day + ")" + (reserved ? " [RESERVED]" : "");
+    }
+}
