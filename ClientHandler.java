@@ -84,7 +84,8 @@ class ClientHandler implements Runnable {
                         
                     case "SHOW_ALL_TRAINS":
                         out.println("--- All Available Tickets ---");
-                        out.println("This command is not fully implemented yet. Please use FIND.");
+                        ArrayList<Ticket> available = new ArrayList<Ticket>();
+                        
                         break;
 
                     default:
@@ -106,3 +107,4 @@ class ClientHandler implements Runnable {
     }
 
 }
+
