@@ -38,7 +38,7 @@ public class TrainManager {
         return available;
     }
 
-    // تنفيذ الحجز
+    
     public boolean reserveTicket(String ticketId) {
         for (Train t : trains) {
             for (Ticket ticket : t.getTickets()) {
