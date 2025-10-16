@@ -21,7 +21,7 @@ public class TrainManager {
       
     }
 
-    // البحث عن التذاكر المتاحة حسب المدن واليوم والفئة
+   
     public ArrayList<Ticket> findAvailableTickets(String source, String destination, int day, String classType) {
         ArrayList<Ticket> available = new ArrayList<>();
         for (Train t : trains) {
