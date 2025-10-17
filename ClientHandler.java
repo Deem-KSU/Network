@@ -1,6 +1,3 @@
-
-package network;
-
 import java.io.*;
 import java.net.*;
 import java.util.*;
@@ -72,16 +69,15 @@ class ClientHandler implements Runnable {
                         String seatClass = parts[4]; 
                         ArrayList<Ticket> availableTickets = manager.findAvailableTickets(source, destination, day, seatClass);
                         
-                        if (availableTickets.isEmpty()) {
-                            out.println("No available tickets found for this route, day, and class.");
-                        } else {
-                            out.println("Available Tickets:");
-                            for (Ticket t : availableTickets) {
-                                out.println("- " + t.toString());
-                            }
-                        }
-                        break;
-                        
+                   
+
+                         if (availableTickets.isEmpty()) {
+                         out.println("ERROR: No available tickets found for this route, day, and class."); 
+                         } else {
+                          Ticket firstTicket = availableTickets.get(0);
+                         out.println("TICKET_FOUND:" + firstTicket.getTicketId());
+                          }
+                         break;            
                     
                     default:
                         out.println("Unknown command. Try: RESERVE, FIND,  EXIT."); 
@@ -102,7 +98,3 @@ class ClientHandler implements Runnable {
     }
 
 }
-
-
-
-
