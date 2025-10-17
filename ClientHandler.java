@@ -82,13 +82,9 @@ class ClientHandler implements Runnable {
                         }
                         break;
                         
-                    case "SHOW_ALL_TRAINS":
-                      
-                        
-                        break;
-
+                    
                     default:
-                        out.println("Unknown command. Try: RESERVE, FIND, SHOW ALL TRAINS, EXIT."); 
+                        out.println("Unknown command. Try: RESERVE, FIND,  EXIT."); 
                         break;
                 }
             }
@@ -106,6 +102,7 @@ class ClientHandler implements Runnable {
     }
 
 }
+
 
 
 
