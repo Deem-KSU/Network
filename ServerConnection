@@ -1,0 +1,48 @@
+package network;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.Socket;
+
+public class ServerConnection implements Runnable{
+    private Socket server;
+    private BufferedReader in;
+    private volatile String latestResponse = null; 
+      
+    public ServerConnection (Socket s) throws IOException{
+        server=s;
+        in= new BufferedReader (new InputStreamReader(server.getInputStream())); 
+    }
+    
+    
+    public String getLatestResponse() {
+        String response = this.latestResponse;
+        this.latestResponse = null;
+        return response;
+    }
+
+    @Override
+    public void run(){
+        
+            String serverResponse;
+            try {
+                while(!Thread.currentThread().isInterrupted()){
+                serverResponse = in.readLine(); 
+                if (serverResponse==null) break;
+                
+                
+                this.latestResponse = serverResponse; 
+                System.out.println("Server says: "+serverResponse); 
+                }
+                
+            } catch (IOException ex) {
+                System.err.println("Connection lost to server.");
+            } finally{
+                try {
+                    if (in != null) in.close();
+                    if (server != null) server.close();
+                } catch (IOException ex) {
+                }
+            }     
+    }           
+}
