@@ -1,0 +1,82 @@
+import javax.swing.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+import java.awt.*;
+
+public class LoginFrame extends JFrame {
+    
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton loginButton;
+
+    private Client networkClient; 
+
+    public LoginFrame() {
+        setTitle("PingTrip");
+        setSize(350, 200);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); 
+        
+        
+        JPanel panel = new JPanel(null);
+        panel.setBackground(UIManager.getColor("Panel.background"));
+
+        JLabel userLabel = new JLabel("Username:");
+        userLabel.setBounds(10, 20, 100, 25);
+        panel.add(userLabel);
+
+       
+        usernameField = new JTextField(); 
+        usernameField.setBounds(120, 20, 180, 25);
+        panel.add(usernameField);
+
+        JLabel passwordLabel = new JLabel("Password:");
+        passwordLabel.setBounds(10, 50, 100, 25);
+        panel.add(passwordLabel);
+
+
+        passwordField = new JPasswordField(); 
+        passwordField.setBounds(120, 50, 180, 25);
+        panel.add(passwordField);
+
+        loginButton = new JButton("Login");
+        loginButton.setBounds(120, 80, 80, 25);
+        panel.add(loginButton);
+        
+        add(panel);
+
+        loginButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                String username = usernameField.getText();
+                String password = new String(passwordField.getPassword());
+                
+                
+                if (username.length() > 0 && password.length() > 0) { 
+                    try {
+                        networkClient = new Client();
+                        
+                        JOptionPane.showMessageDialog(LoginFrame.this, "Welcome aboard PingTrip!", "Welcome", JOptionPane.INFORMATION_MESSAGE);
+                        
+                        MainMenuFrame mainMenu = new MainMenuFrame(networkClient);
+                        mainMenu.setVisible(true);
+                        
+                        dispose(); 
+                        
+                    } catch (IOException ex) {
+                        JOptionPane.showMessageDialog(LoginFrame.this, "Connection failed: " + ex.getMessage() + ". Is NewServer running on port 9090?", "Network Error", JOptionPane.ERROR_MESSAGE);
+                    }
+                } else {
+                    JOptionPane.showMessageDialog(LoginFrame.this, "Please enter Username and Password.", "Input Required", JOptionPane.WARNING_MESSAGE);
+                }
+            }
+        });
+        
+        setVisible(true);
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new LoginFrame());
+    }
+}
