@@ -24,7 +24,7 @@ public String sendCommand(String command) throws IOException {
              return in.readLine();
         }
         return null;   
-          
+        }  
     // responses from the server (used for FIND command)
 public String receiveMultiLineResponse() throws IOException {
         StringBuilder response = new StringBuilder();
