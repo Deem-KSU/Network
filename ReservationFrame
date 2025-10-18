@@ -1,0 +1,238 @@
+import javax.swing.*; // Import Swing for GUI
+import java.awt.*; 
+import java.awt.event.ActionEvent; 
+import java.awt.event.ActionListener; 
+import java.io.IOException; 
+import java.util.ArrayList; 
+import java.util.Arrays; 
+import java.util.List; 
+import java.util.stream.Collectors; 
+
+public class ReservationFrame extends JFrame {
+    // Declaring UI and connection components
+    private ClientConnection client;
+    private JComboBox<String> routeDropdown; // Dropdown for Routes
+    private JComboBox<String> dayDropdown;   // Dropdown for days
+    private JRadioButton firstClassRadio, economyClassRadio; // Class selection
+    private ButtonGroup classGroup;
+    private JButton searchButton, bookButton; // Action buttons
+    private JList<String> ticketsList; // List to display Available tickets
+    private DefaultListModel<String> ticketsModel;
+    private JLabel statusLabel; 
+
+    
+    // Days array
+    private final String[] DAYS_AR = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    
+    // convert day name to a number (1-7)
+    private int getDayNumber(String dayName) {
+        for (int i = 0; i < DAYS_AR.length; i++) {
+            if (DAYS_AR[i].equals(dayName)) {
+                return i + 1; // Sunday is day 1
+            }
+        }
+        return 1; // Default to 1 (Sunday)
+    }
+
+    public ReservationFrame(ClientConnection client) {
+        this.client = client;
+        setTitle("Book new Ticket"); 
+        setSize(500, 550); 
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close this frame when done
+        setLocationRelativeTo(null); 
+
+        JPanel optionsPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder("Select a booking option"));
+
+       
+        //Route Dropdown 
+        routeDropdown = new JComboBox<>();
+        optionsPanel.add(new JLabel("From(Departure)--> To(Destination):"));
+        optionsPanel.add(routeDropdown);
+        
+       
+        //Day Dropdown
+        dayDropdown = new JComboBox<>(DAYS_AR);
+        optionsPanel.add(new JLabel("Day:"));
+        optionsPanel.add(dayDropdown);
+
+        
+        //Class Radio Buttons
+        firstClassRadio = new JRadioButton("First Class");
+        economyClassRadio = new JRadioButton("Economy Class", true); // Default selected
+        classGroup = new ButtonGroup();
+        classGroup.add(firstClassRadio);
+        classGroup.add(economyClassRadio);
+
+        JPanel classPanel = new JPanel();
+        classPanel.add(firstClassRadio);
+        classPanel.add(economyClassRadio);
+        optionsPanel.add(new JLabel("Class:"));
+        optionsPanel.add(classPanel);
+
+        //Search Button
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(e -> searchTickets()); // Set search action
+        optionsPanel.add(new JLabel(""));
+        optionsPanel.add(searchButton); 
+        
+        // Panel for results (Availble tickets)
+        ticketsModel = new DefaultListModel<>();
+        ticketsList = new JList<>(ticketsModel);
+        ticketsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); // Only allow one selection
+        JScrollPane scrollPane = new JScrollPane(ticketsList); // So user can scroll
+        
+        // Panel for booking button
+        JPanel controlPanel = new JPanel(new BorderLayout());
+        bookButton = new JButton("Book");
+        bookButton.setEnabled(false); // Disabled by default (مارح يقدر يضغطها الين يحدد تيكت معينه)
+        bookButton.addActionListener(e -> bookTicket()); 
+        
+        statusLabel = new JLabel("Please search first", SwingConstants.CENTER); // Status message label
+        
+        controlPanel.add(bookButton, BorderLayout.NORTH); 
+        controlPanel.add(statusLabel, BorderLayout.SOUTH); 
+
+        
+        // Listener to enable Book button when a ticket is selected
+        ticketsList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                bookButton.setEnabled(ticketsList.getSelectedIndex() != -1);
+            }
+        });
+
+        
+        // Add all panels to the main frame
+        add(optionsPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.SOUTH);
+        
+        
+        loadRoutes(); // Load available ٌoutes when starting
+    }
+    private void loadRoutes() {
+        
+        String[] routes = {
+            "Riyadh - Dammam", "Riyadh - Jeddah", "Riyadh - Mecca",
+            "Dammam - Riyadh", "Jeddah - Tabuk", "Mecca - Medina",
+            "Dammam - Jeddah", "Medina - Riyadh", "Tabuk - Riyadh",
+            "Jeddah - Riyadh"
+        };
+        for(String route : routes) {
+            routeDropdown.addItem(route); // Add each Route to the dropdown
+        }
+    }
+
+
+    // Method to handle the ticket search process
+    private void searchTickets() {
+        // Get selected criteria from UI
+        String route = (String) routeDropdown.getSelectedItem();
+        String[] parts = route.split(" - ");
+        String source = parts[0];
+        String destination = parts[1];
+        
+        int day = getDayNumber((String) dayDropdown.getSelectedItem());
+        String classType = firstClassRadio.isSelected() ? "first" : "economy";
+        
+        statusLabel.setText("Searching for tickets...");
+        ticketsModel.clear(); // Clear old results
+        bookButton.setEnabled(false); // Disable book button
+
+        // Use SwingWorker for network operation (to keep GUI responsive)
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                // Background task --> send FIND command
+                String command = String.format("FIND %s %s %d %s", source, destination, day, classType);
+                client.sendCommand(command); // Send command to server
+                return client.receiveMultiLineResponse(); // Read multi-line response from server
+            }
+
+            @Override
+            protected void done() {
+                //to Update results on GUI thread
+                try {
+                    String response = get(); // Get response string
+                    if (response.contains("No available tickets found")) {
+                        statusLabel.setText("No tickets available currently!");
+                    } else if (response.contains("Available tickets:")) {
+                       
+                        List<String> lines = Arrays.asList(response.split("\n")); // Split response by line
+                        
+                        // Filter lines to find actual ticket data 
+                        List<String> ticketLines = lines.stream()
+                            .filter(s -> s.startsWith("T")) 
+                            .collect(Collectors.toList());
+                            
+                        if (ticketLines.isEmpty()) {
+                            statusLabel.setText("No tickets available currently!");
+                        } else {
+                            for (String ticket : ticketLines) {
+                                ticketsModel.addElement(ticket); // Add each ticket to the list model
+                            }
+                            statusLabel.setText("Found" + ticketsModel.getSize() + " Tickets available");
+                        }
+                    } else {
+                        statusLabel.setText("Sorry,Error occurred during data retrieval!");
+                    }
+                } catch (Exception ex) {
+                    // Handle connection or parsing errors
+                    ex.printStackTrace();
+                    statusLabel.setText("Search failed. Please check your connection!");
+                }
+            }
+        }.execute(); // Start the network task
+    }
+    
+    // Method to handle the ticket booking process
+    private void bookTicket() {
+        String selectedTicket = ticketsList.getSelectedValue(); // Get the selected ticket string
+        if (selectedTicket == null) {
+            JOptionPane.showMessageDialog(this, "Please select a ticket to book ", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+        // Get the ticket ID 
+        String ticketId = selectedTicket.split(" ")[0];
+        
+        statusLabel.setText("Booking the ticket" + ticketId + "...");
+        bookButton.setEnabled(false);
+
+        
+        // Use SwingWorker for network operation
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+                // Background task ---> send RESERVE command
+                String command = "RESERVE " + ticketId;
+                return client.sendCommand(command); // Send command and get server response
+            }
+
+            @Override
+            protected void done() {
+                //Update GUI based on booking result
+                try {
+                    String response = get(); // Get response string
+                    if (response.contains("reserved successfully!")) {
+                        statusLabel.setText("Reserved successfully!: " + ticketId);
+                        JOptionPane.showMessageDialog(ReservationFrame.this, "Ticket booked successfully", "Booked", JOptionPane.INFORMATION_MESSAGE);
+                       
+                        ticketsModel.removeElement(selectedTicket); // Remove booked ticket from list
+                        searchTickets(); // to Update other clients view
+                        bookButton.setEnabled(false);
+                    } else {
+                        statusLabel.setText("Booking failed!, This ticket is already reserved by another customer");
+                        bookButton.setEnabled(true);
+                        searchTickets(); // Refresh list to show ticket is still Available or to Update status
+                    }
+                } catch (Exception ex) {
+                    // Handle network errors during booking
+                    ex.printStackTrace();
+                    statusLabel.setText("Booking failed!, Failed to connect ");
+                    bookButton.setEnabled(true);
+                }
+            }
+        }.execute(); // Start the network task
+    }
+}
