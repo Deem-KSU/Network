@@ -1,0 +1,149 @@
+package pingtrip;
+
+import javax.swing.*; // Import Swing for GUI components
+import java.awt.*; 
+import java.awt.event.ActionEvent; 
+import java.awt.event.ActionListener; 
+import java.io.*; 
+import java.net.Socket; // Import Socket for network connection
+
+public class SignInFrame extends JFrame {
+    // Declaring UI components and network objects
+    private JTextField usernameField;
+    private JPasswordField passwordField;
+    private JButton signInSubmitButton;
+    private JLabel statusLabel;
+    private ClientConnection client; // Object to handle server connection
+
+    public SignInFrame() {
+        // Constructor to set up the Sign In window
+        setTitle("Sign In"); 
+        setSize(400, 300); 
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); // Close this frame when done
+        setLocationRelativeTo(null); 
+
+        setLayout(new BorderLayout()); 
+
+        // Welcome label 
+        JLabel welcomeLabel = new JLabel("WELCOME !", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(15, 0, 10, 0));
+        add(welcomeLabel, BorderLayout.NORTH);
+
+        // Panel for username and password fields
+        JPanel formPanel = new JPanel(new GridBagLayout()); 
+        formPanel.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30)); 
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 5, 10, 5); 
+        gbc.fill = GridBagConstraints.HORIZONTAL; 
+        
+        //Username Row 
+        gbc.gridx = 0; 
+        gbc.gridy = 0; 
+        gbc.weightx = 0; 
+        JLabel usernameLabel = new JLabel("Username:", SwingConstants.RIGHT); 
+        formPanel.add(usernameLabel, gbc);
+
+        gbc.gridx = 1; //input field
+        gbc.gridy = 0;
+        gbc.weightx = 1.0; // Field can stretch for extra input
+        usernameField = new JTextField(15);
+        usernameField.setPreferredSize(new Dimension(150, 25)); 
+        formPanel.add(usernameField, gbc);
+        
+        //Password Row
+        gbc.gridx = 0; 
+        gbc.gridy = 1; 
+        gbc.weightx = 0;
+        JLabel passwordLabel = new JLabel("Password:", SwingConstants.RIGHT);
+        formPanel.add(passwordLabel, gbc);
+
+        gbc.gridx = 1; //input field
+        gbc.gridy = 1;
+        gbc.weightx = 1.0; // Field can stretch for extra input
+        passwordField = new JPasswordField(15); 
+        passwordField.setPreferredSize(new Dimension(150, 25));
+        formPanel.add(passwordField, gbc);
+        
+        add(formPanel, BorderLayout.CENTER); 
+        
+        JPanel bottomPanel = new JPanel(new BorderLayout());
+        
+        JPanel buttonContainer = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        signInSubmitButton = new JButton("Sign In");
+        signInSubmitButton.setPreferredSize(new Dimension(150, 30));
+
+        bottomPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0)); 
+        
+        buttonContainer.add(signInSubmitButton); 
+        
+        statusLabel = new JLabel("", SwingConstants.CENTER); // Label to show connection status
+        statusLabel.setBorder(BorderFactory.createEmptyBorder(5, 0, 15, 0));
+        
+        bottomPanel.add(buttonContainer, BorderLayout.NORTH);
+        bottomPanel.add(statusLabel, BorderLayout.SOUTH);
+        
+        add(bottomPanel, BorderLayout.SOUTH); 
+
+        // Add action listener for the Sign In button
+        signInSubmitButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                attemptSignIn(); // Call the sign-in logic method
+            }
+        });
+    }
+
+    // Method to handle sign-in attempt and server connection
+    private void attemptSignIn() {
+        String username = usernameField.getText(); // Get username
+        char[] password = passwordField.getPassword(); // Get password
+        
+        // Use SwingWorker for networking (to prevents GUI freeze)
+        new SwingWorker<Boolean, Void>() {
+            
+            @Override
+            protected Boolean doInBackground() throws Exception {
+                // Background task --> connect to  the server
+                statusLabel.setText("Connecting to server...");
+                signInSubmitButton.setEnabled(false); // Disable button during connection
+                
+                try {
+                    // create a connection
+                    client = new ClientConnection("localhost", 1234);
+                    return true; // Connection successful
+                } catch (IOException e) {
+                    System.err.println("Connection Failed: " + e.getMessage());
+                    return false; // Connection failed
+                }
+            }
+
+            @Override
+            protected void done() {
+                //update GUI based on result (connected or not)
+                signInSubmitButton.setEnabled(true); // Re enable button (working again)
+                try {
+                    if (get()) { // If doInBackground returned true
+                        statusLabel.setText("Connected to The server successfully!");
+                        statusLabel.setForeground(Color.GREEN.darker());
+                        
+                        // Show success message and open main menu
+                        JOptionPane.showMessageDialog(SignInFrame.this, "You have registered successfully, Hello (" + username+")");
+                        new MainMenuFrame(client).setVisible(true); // Open main menu
+                        dispose(); // Close sign-in frame
+                        
+                    } else { // If connection failed
+                        statusLabel.setText("Connection to the server failed");
+                        statusLabel.setForeground(Color.RED);
+                    }
+                } catch (Exception ex) {
+                    // Handle unexpected errors
+                    ex.printStackTrace();
+                    statusLabel.setText("Something went wrong!");
+                    statusLabel.setForeground(Color.RED);
+                }
+            }
+        }.execute(); 
+    }
+}
