@@ -26,3 +26,4 @@ public class Ticket {
         return ticketId + " (" + classType + ", Day " + day + ")" + (reserved ? " [RESERVED]" : "");
     }
 }
+
