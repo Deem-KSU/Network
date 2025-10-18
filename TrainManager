@@ -39,7 +39,7 @@ public class TrainManager {
     }
 
     
-    public boolean reserveTicket(String ticketId) {
+    public synchronized boolean reserveTicket(String ticketId) {
         for (Train t : trains) {
             for (Ticket ticket : t.getTickets()) {
                 if (ticket.getTicketId().equalsIgnoreCase(ticketId)) {
