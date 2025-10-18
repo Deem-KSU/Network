@@ -1,1 +1,66 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 
+public class WelcomeFrame extends JFrame {
+    private JButton loginButton;
+    private JButton signInButton;
+    private JPanel mainPanel;
+// Constructor that initializes the welcome screen
+    public WelcomeFrame() {
+        // Window setup
+        setTitle("PingTrip System");
+        setSize(350, 250); 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+        // Create main panel with BorderLayout
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+
+        // Welcome message label
+        JLabel welcomeLabel = new JLabel("ًWelcome aboard PingTrip!", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10)); 
+
+        mainPanel.add(welcomeLabel, BorderLayout.NORTH);
+        
+        // Container for buttons (vertical layout)
+        JPanel buttonContainer = new JPanel();
+        buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.Y_AXIS));
+
+        buttonContainer.add(Box.createVerticalStrut(20));
+
+        //Log In Button
+        loginButton = new JButton("Log In");
+        loginButton.setAlignmentX(CENTER_ALIGNMENT);
+        
+        // Show message (feature not implemented yet)
+        loginButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Log In functionality is not working for now !"));
+        buttonContainer.add(loginButton);
+
+        buttonContainer.add(Box.createVerticalStrut(15)); 
+        
+        //Sign In Button
+        signInButton = new JButton("Sign In");
+        signInButton.setAlignmentX(CENTER_ALIGNMENT);
+        
+        // Open SignInFrame and close current window
+        signInButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new SignInFrame().setVisible(true);
+                dispose();
+            }
+        });
+        buttonContainer.add(signInButton);
+        
+        buttonContainer.add(Box.createVerticalStrut(20));
+
+        // Add button container to the center of the frame
+        mainPanel.add(buttonContainer, BorderLayout.CENTER);
+        // Add main panel to frame
+        add(mainPanel);
+    }
+}
