@@ -1,1 +1,57 @@
+package pingtrip;
 
+import java.io.*;
+import java.net.Socket;
+
+public class ClientConnection {
+    private Socket socket;//for the server
+    private PrintWriter out;//to send messages
+    private BufferedReader in;//to read responses from server
+    
+//connects to the server at the given host and port
+ public ClientConnection(String host, int port) throws IOException {
+        this.socket = new Socket(host, port);
+        this.out = new PrintWriter(this.socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+        
+        // welcome messages from server
+        System.out.println("Server Welcome: " + in.readLine());
+        System.out.println("Server Commands: " + in.readLine());
+    }
+//sends single command to server
+public String sendCommand(String command) throws IOException {
+        out.println(command);
+        
+        if (command.startsWith("RESERVE")) {
+             return in.readLine();
+        }
+        return null;   
+          
+    // responses from the server (used for FIND command)
+public String receiveMultiLineResponse() throws IOException {
+        StringBuilder response = new StringBuilder();
+        String line;
+        line = in.readLine();
+        if (line == null) return "";
+        response.append(line).append("\n");
+        
+        if (line.contains("Available tickets:")) {
+            while(true){ 
+                
+                line = in.readLine(); 
+                if (line == null || line.isEmpty()) break; 
+                response.append(line).append("\n");
+            }
+        }
+        
+        
+        
+        return response.toString().trim();
+    }
+//Closes the connection to the server
+public void close() throws IOException {
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
+    }
+}
