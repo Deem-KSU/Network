@@ -1,100 +1,94 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+// Shared TrainManager instance for all clients
+public class ClientHandler implements Runnable {
 
-class ClientHandler implements Runnable {
+    private Socket client;// Represents this clients socket                   
+    private BufferedReader in;// To read messages from the client              
+    private PrintWriter out;// To send messages to the client                
+    private TrainManager manager;// Shared TrainManager for all clients          
 
-    private Socket client;                        // Socket for this client
-    private BufferedReader in;                    // Input stream from client
-    private PrintWriter out;                      // Output stream to client
-    private TrainManager manager;                 // Train manager reference
-
-    // Constructor - initialize the socket and manager
+    // Constructor that initializes the handler with the client's socket and shared TrainManager
     public ClientHandler(Socket client, TrainManager manager) throws IOException {
         this.client = client;
         this.manager = manager;
-        in = new BufferedReader(new InputStreamReader(client.getInputStream()));
-        out = new PrintWriter(client.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+        this.out = new PrintWriter(client.getOutputStream(), true);
     }
+//The main logic that runs in a separate thread for each client
 
     @Override
     public void run() {
         try {
-            out.println("Connected to Train Server! Enter commands...");
+            out.println("Welcome to Train Reservation System!");
+            out.println("Commands: FIND <source> <destination> <day> <classType> | RESERVE <ticketId> | SHOWALL | EXIT");
 
-            // Wait for input from the client
-            String request;
-            while ((request = in.readLine()) != null) {
-
-                if (request.equalsIgnoreCase("EXIT")) {
-                    out.println("Connection closed. Goodbye!");
+            String line;
+            while ((line = in.readLine()) != null) {
+                line = line.trim();
+                if (line.equalsIgnoreCase("exit")) {
+                    out.println("Goodbye!");
                     break;
                 }
 
-                // Split command by spaces
-                String[] parts = request.split(" ");
+                String[] parts = line.split("\\s+");
                 String command = parts[0].toUpperCase();
-
+               // Execute the proper command based on input
                 switch (command) {
+                    case "FIND":// list available tickets
 
-                    case "RESERVE":
-                        if (parts.length < 2) {
-                            out.println(" Usage: RESERVE <ticketId>"); 
-                            break;
-                        }
-                        String ticketIdToReserve = parts[1]; 
-                        if (manager.reserveTicket(ticketIdToReserve)) {
-                            out.println("Ticket " + ticketIdToReserve + " reserved successfully.");
+                        if (parts.length != 5) {
+                            out.println("Usage: FIND <source> <destination> <day> <classType>");
                         } else {
-                            out.println("ERROR: Reservation failed. Check Ticket ID or availability.");
+                            String source = parts[1];
+                            String destination = parts[2];
+                            int day = Integer.parseInt(parts[3]);
+                            String classType = parts[4];
+                            ArrayList<Ticket> found = manager.findAvailableTickets(source, destination, day, classType);
+                            if (found.isEmpty()) {
+                                out.println("No available tickets found.");
+                            } else {
+                                out.println("Available tickets:");
+                                for (Ticket t : found) {
+                                    out.println(t.toString());
+                                }
+                                out.println("");
+                            }
                         }
                         break;
 
-                    case "FIND":
-                        if (parts.length < 5) {
-                            out.println("Usage: FIND <source> <destination> <day: 1-7> <class: first/economy>");
-                            break;
+                    case "RESERVE":// reserve a ticket by id
+                        if (parts.length != 2) {
+                            out.println("Usage: RESERVE <ticketId>");
+                        } else {
+                            String ticketId = parts[1];
+                            boolean success = manager.reserveTicket(ticketId);
+                            if (success) {
+                                out.println("Ticket " + ticketId + " reserved successfully!");
+                            } else {
+                                out.println("Failed to reserve ticket (already reserved or not found).");
+                            }
                         }
-                        String source = parts[1];
-                        String destination = parts[2];
-                        int day;
-                        try {
-                            day = Integer.parseInt(parts[3]);
-                            if (day < 1 || day > 7) throw new IllegalArgumentException();
-                        } catch (Exception e) {
-                            out.println("ERROR: Day must be a number between 1 and 7.");
-                            break;
-                        }
+                        break;
 
-                        String seatClass = parts[4]; 
-                        ArrayList<Ticket> availableTickets = manager.findAvailableTickets(source, destination, day, seatClass);
-                        
-                   
-
-                         if (availableTickets.isEmpty()) {
-                         out.println("ERROR: No available tickets found for this route, day, and class."); 
-                         } else {
-                          Ticket firstTicket = availableTickets.get(0);
-                         out.println("TICKET_FOUND:" + firstTicket.getTicketId());
-                          }
-                         break;            
-                    
-                    default:
-                        out.println("Unknown command. Try: RESERVE, FIND,  EXIT."); 
+                       default:
+                        out.println("Unknown command. Try FIND, RESERVE, SHOWALL, or EXIT.");
                         break;
                 }
             }
 
         } catch (IOException e) {
-            System.err.println("Exception in client thread: " + e.getMessage());
+            System.out.println("Client disconnected: " + client.getInetAddress());
         } finally {
+         // close connection
+
             try {
                 client.close();
-            } catch (IOException ex) {
-                ex.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
             }
-            System.out.println("Client disconnected.");
         }
     }
-
 }
+
