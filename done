@@ -1,0 +1,51 @@
+@Override
+protected void done() {
+    try {
+        String response = get();
+
+        if (response == null) {
+            statusLabel.setText("No response from server.");
+            bookButton.setEnabled(true);
+            return;
+        }
+
+        response = response.toLowerCase();
+
+        if (response.contains("reserved successfully")) {
+            statusLabel.setText("Reserved successfully: " + ticketId);
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "✅ Ticket booked successfully!",
+                "Booked", JOptionPane.INFORMATION_MESSAGE
+            );
+            ticketsModel.removeElement(selectedTicket);
+            searchTickets();
+            bookButton.setEnabled(false);
+
+        } else if (response.contains("failed") || response.contains("error")) {
+            // 🔹 هذا الشرط الجديد يظهر رسالة واضحة إذا كانت التذكرة محجوزة بالفعل
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "⚠️ This ticket is already reserved by another passenger.",
+                "Booking Failed",
+                JOptionPane.WARNING_MESSAGE
+            );
+            statusLabel.setText("This ticket is already reserved.");
+            searchTickets();
+            bookButton.setEnabled(true);
+
+        } else {
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "Unknown response from server: " + response,
+                "Error", JOptionPane.ERROR_MESSAGE
+            );
+            bookButton.setEnabled(true);
+        }
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        statusLabel.setText("Booking failed. Connection error.");
+        bookButton.setEnabled(true);
+    }
+}
