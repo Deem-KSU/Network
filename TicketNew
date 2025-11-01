@@ -1,0 +1,33 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+public class Ticket {
+    private String ticketId;    
+    private String trainId;
+    private String classType;   
+    private int day;            
+    private boolean reserved;   
+
+    public Ticket(String ticketId, String trainId, String classType, int day) {
+        this.ticketId = ticketId;
+        this.trainId = trainId;
+        this.classType = classType;
+        this.day = day;
+        this.reserved = false;
+    }
+
+    public String getTicketId() { return ticketId; }
+    public String getTrainId() { return trainId; }
+    public String getClassType() { return classType; }
+    public int getDay() { return day; }
+    public boolean isReserved() { return reserved; }
+
+    public void reserve() { this.reserved = true; }
+
+    @Override
+    public String toString() {
+        return ticketId + " (" + classType + ", Day " + day + ")" + (reserved ? " [RESERVED]" : "");
+    }
+}
