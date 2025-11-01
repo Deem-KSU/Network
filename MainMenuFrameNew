@@ -1,0 +1,85 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.IOException;
+
+public class MainMenuFrame extends JFrame {
+    private JButton newTicketButton;
+    private JButton exitButton;
+    private ClientConnection client;
+
+    public MainMenuFrame(ClientConnection client) {
+        this.client = client;
+        
+        setTitle("Main Menu");
+        setSize(400, 250);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+       
+       
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        
+        JLabel welcomeLabel = new JLabel("Welcome in PingTrip System!", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 16));
+        welcomeLabel.setAlignmentX(CENTER_ALIGNMENT);
+        panel.add(welcomeLabel);
+         
+        
+        panel.add(Box.createVerticalStrut(20)); 
+
+         
+        Dimension buttonSize = new Dimension(200, 40);
+
+        newTicketButton = new JButton("Book New Ticket");
+        newTicketButton.setAlignmentX(CENTER_ALIGNMENT);
+        
+       
+        newTicketButton.setPreferredSize(buttonSize);
+        newTicketButton.setMaximumSize(buttonSize);
+        newTicketButton.setMinimumSize(buttonSize);
+        newTicketButton.addActionListener(e -> {
+            new ReservationFrame(client).setVisible(true);
+            dispose();
+        });
+        panel.add(newTicketButton);
+
+        panel.add(Box.createVerticalStrut(15)); 
+
+          
+        exitButton = new JButton("Exit");
+        exitButton.setAlignmentX(CENTER_ALIGNMENT);
+       
+        exitButton.setPreferredSize(buttonSize);
+        exitButton.setMaximumSize(buttonSize);
+        exitButton.setMinimumSize(buttonSize);
+        
+        
+        exitButton.addActionListener(e -> {
+            int confirm = JOptionPane.showConfirmDialog(this, 
+                "Are you sure you want to Exit?", "Exit", 
+                JOptionPane.YES_NO_OPTION);
+            
+            if (confirm == JOptionPane.YES_OPTION) {
+                try {
+                   
+                    client.sendCommand("EXIT");
+                    client.close();
+                } catch (IOException ex) {
+                    System.err.println("Error closing connection: " + ex.getMessage());
+                }
+                System.exit(0);
+            }
+        });
+        panel.add(exitButton);
+       
+        add(panel);
+    }
+}
