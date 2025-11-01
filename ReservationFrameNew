@@ -1,0 +1,269 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+
+import javax.swing.*;
+import java.awt.*; 
+import java.awt.event.ActionEvent; 
+import java.awt.event.ActionListener; 
+import java.io.IOException; 
+import java.util.ArrayList; 
+import java.util.Arrays; 
+import java.util.List; 
+import java.util.stream.Collectors; 
+
+public class ReservationFrame extends JFrame {
+    
+    private ClientConnection client;
+    private JComboBox<String> routeDropdown; 
+    private JComboBox<String> dayDropdown;   
+    private JRadioButton firstClassRadio, economyClassRadio; 
+    private ButtonGroup classGroup;
+    private JButton searchButton, bookButton; 
+    private JList<String> ticketsList; 
+    private DefaultListModel<String> ticketsModel;
+    private JLabel statusLabel; 
+
+    
+    
+    private final String[] DAYS_AR = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+    
+   
+    private int getDayNumber(String dayName) {
+        for (int i = 0; i < DAYS_AR.length; i++) {
+            if (DAYS_AR[i].equals(dayName)) {
+                return i + 1; 
+            }
+        }
+        return 1; 
+    }
+
+    public ReservationFrame(ClientConnection client) {
+        this.client = client;
+        setTitle("Book new Ticket"); 
+        setSize(500, 550); 
+        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE); 
+        setLocationRelativeTo(null); 
+
+        JPanel optionsPanel = new JPanel(new GridLayout(4, 2, 10, 10));
+        optionsPanel.setBorder(BorderFactory.createTitledBorder("Select a booking option"));
+
+       
+        
+        routeDropdown = new JComboBox<>();
+        optionsPanel.add(new JLabel("From(Departure)--> To(Destination):"));
+        optionsPanel.add(routeDropdown);
+        
+       
+        
+        dayDropdown = new JComboBox<>(DAYS_AR);
+        optionsPanel.add(new JLabel("Day:"));
+        optionsPanel.add(dayDropdown);
+
+        
+        
+        firstClassRadio = new JRadioButton("First Class");
+        economyClassRadio = new JRadioButton("Economy Class", true); 
+        classGroup = new ButtonGroup();
+        classGroup.add(firstClassRadio);
+        classGroup.add(economyClassRadio);
+
+        JPanel classPanel = new JPanel();
+        classPanel.add(firstClassRadio);
+        classPanel.add(economyClassRadio);
+        optionsPanel.add(new JLabel("Class:"));
+        optionsPanel.add(classPanel);
+
+        
+        searchButton = new JButton("Search");
+        searchButton.addActionListener(e -> searchTickets()); 
+        optionsPanel.add(new JLabel(""));
+        optionsPanel.add(searchButton); 
+        
+        
+        ticketsModel = new DefaultListModel<>();
+        ticketsList = new JList<>(ticketsModel);
+        ticketsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION); 
+        JScrollPane scrollPane = new JScrollPane(ticketsList); 
+        
+        
+        JPanel controlPanel = new JPanel(new BorderLayout());
+        bookButton = new JButton("Book");
+        bookButton.setEnabled(false); 
+        bookButton.addActionListener(e -> bookTicket()); 
+        
+        statusLabel = new JLabel("Please search first", SwingConstants.CENTER); 
+        
+        controlPanel.add(bookButton, BorderLayout.NORTH); 
+        controlPanel.add(statusLabel, BorderLayout.SOUTH); 
+
+        
+       
+        ticketsList.addListSelectionListener(e -> {
+            if (!e.getValueIsAdjusting()) {
+                bookButton.setEnabled(ticketsList.getSelectedIndex() != -1);
+            }
+        });
+
+        
+        
+        add(optionsPanel, BorderLayout.NORTH);
+        add(scrollPane, BorderLayout.CENTER);
+        add(controlPanel, BorderLayout.SOUTH);
+        
+        
+        loadRoutes(); 
+    }
+    private void loadRoutes() {
+        
+        String[] routes = {
+            "Riyadh - Dammam", "Riyadh - Jeddah", "Riyadh - Mecca",
+            "Mecca - Medina","Dammam - Jeddah"};
+        for(String route : routes) {
+            routeDropdown.addItem(route); 
+        }
+    }
+
+
+  
+    private void searchTickets() {
+        
+        String route = (String) routeDropdown.getSelectedItem();
+        String[] parts = route.split(" - ");
+        String source = parts[0];
+        String destination = parts[1];
+        
+        int day = getDayNumber((String) dayDropdown.getSelectedItem());
+        String classType = firstClassRadio.isSelected() ? "first" : "economy";
+        
+        statusLabel.setText("Searching for tickets...");
+        ticketsModel.clear(); 
+        bookButton.setEnabled(false); 
+
+       
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+               
+                String command = String.format("FIND %s %s %d %s", source, destination, day, classType);
+                client.sendCommand(command); 
+                return client.receiveMultiLineResponse(); 
+            }
+
+            @Override
+            protected void done() {
+                
+                try {
+                    String response = get(); 
+                    if (response.contains("No available tickets found")) {
+                        statusLabel.setText("No tickets available currently!");
+                    } else if (response.contains("Available tickets:")) {
+                       
+                        List<String> lines = Arrays.asList(response.split("\n")); 
+                        
+                         
+                        List<String> ticketLines = lines.stream()
+                            .filter(s -> s.startsWith("T")) 
+                            .collect(Collectors.toList());
+                            
+                        if (ticketLines.isEmpty()) {
+                            statusLabel.setText("No tickets available currently!");
+                        } else {
+                            for (String ticket : ticketLines) {
+                                ticketsModel.addElement(ticket); 
+                            }
+                            statusLabel.setText("Found" + ticketsModel.getSize() + " Tickets available");
+                        }
+                    } else {
+                        statusLabel.setText("Sorry,Error occurred during data retrieval!");
+                    }
+                } catch (Exception ex) {
+                    
+                    ex.printStackTrace();
+                    statusLabel.setText("Search failed. Please check your connection!");
+                }
+            }
+        }.execute(); 
+    }
+    
+    
+    private void bookTicket() {
+        String selectedTicket = ticketsList.getSelectedValue(); 
+        if (selectedTicket == null) {
+            JOptionPane.showMessageDialog(this, "Please select a ticket to book ", "Error", JOptionPane.ERROR_MESSAGE);
+            return;
+        }
+
+       
+        String ticketId = selectedTicket.split(" ")[0];
+        
+        statusLabel.setText("Booking the ticket" + ticketId + "...");
+        bookButton.setEnabled(false);
+
+        
+        
+        new SwingWorker<String, Void>() {
+            @Override
+            protected String doInBackground() throws Exception {
+               
+                String command = "RESERVE " + ticketId;
+                return client.sendCommand(command); 
+            }
+
+            @Override
+            
+protected void done() {
+    try {
+        String response = get();
+
+        if (response == null) {
+            statusLabel.setText("No response from server.");
+            bookButton.setEnabled(true);
+            return;
+        }
+
+        response = response.toLowerCase();
+
+        if (response.contains("reserved successfully")) {
+            statusLabel.setText("Reserved successfully: " + ticketId);
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "✅ Ticket booked successfully!",
+                "Booked", JOptionPane.INFORMATION_MESSAGE
+            );
+            ticketsModel.removeElement(selectedTicket);
+            searchTickets();
+            bookButton.setEnabled(false);
+
+        } else if (response.contains("failed") || response.contains("error")) {
+           
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "⚠️ This ticket is already reserved by another passenger.",
+                "Booking Failed",
+                JOptionPane.WARNING_MESSAGE
+            );
+            statusLabel.setText("This ticket is already reserved.");
+            searchTickets();
+            bookButton.setEnabled(true);
+
+        } else {
+            JOptionPane.showMessageDialog(
+                ReservationFrame.this,
+                "Unknown response from server: " + response,
+                "Error", JOptionPane.ERROR_MESSAGE
+            );
+            bookButton.setEnabled(true);
+        }
+
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        statusLabel.setText("Booking failed. Connection error.");
+        bookButton.setEnabled(true);
+    }
+}
+        }.execute(); 
+    }
+}
