@@ -1,0 +1,72 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+
+public class WelcomeFrame extends JFrame {
+    private JButton loginButton;
+    private JButton signupButton;
+    private JPanel mainPanel;
+
+    public WelcomeFrame() {
+       
+        setTitle("PingTrip System");
+        setSize(350, 250); 
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null);
+
+       
+        mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+
+       
+        JLabel welcomeLabel = new JLabel("ًWelcome aboard PingTrip!", SwingConstants.CENTER);
+        welcomeLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        welcomeLabel.setBorder(BorderFactory.createEmptyBorder(20, 10, 10, 10)); 
+
+        mainPanel.add(welcomeLabel, BorderLayout.NORTH);
+        
+        
+        JPanel buttonContainer = new JPanel();
+        buttonContainer.setLayout(new BoxLayout(buttonContainer, BoxLayout.Y_AXIS));
+
+        buttonContainer.add(Box.createVerticalStrut(20));
+
+        
+        loginButton = new JButton("Log In");
+        loginButton.setAlignmentX(CENTER_ALIGNMENT);
+        
+       
+        loginButton.addActionListener(e -> JOptionPane.showMessageDialog(this, "Log In functionality is not working for now !"));
+        buttonContainer.add(loginButton);
+
+        buttonContainer.add(Box.createVerticalStrut(15)); 
+        
+        
+        signupButton = new JButton("Sign Up");
+        signupButton.setAlignmentX(CENTER_ALIGNMENT);
+        
+        
+        signupButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                new SignInFrame().setVisible(true);
+                dispose();
+            }
+        });
+        buttonContainer.add(signupButton);
+        
+        buttonContainer.add(Box.createVerticalStrut(20));
+
+       
+        mainPanel.add(buttonContainer, BorderLayout.CENTER);
+        
+        add(mainPanel);
+    }
+}
