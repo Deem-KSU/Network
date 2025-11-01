@@ -1,0 +1,61 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+
+import java.io.*;
+import java.net.Socket;
+
+public class ClientConnection {
+    private Socket socket;
+    private PrintWriter out;
+    private BufferedReader in;
+    
+
+ public ClientConnection(String host, int port) throws IOException {
+        this.socket = new Socket(host, port);
+        this.out = new PrintWriter(this.socket.getOutputStream(), true);
+        this.in = new BufferedReader(new InputStreamReader(this.socket.getInputStream()));
+        
+       
+        System.out.println("Server Welcome: " + in.readLine());
+        System.out.println("Server Commands: " + in.readLine());
+    }
+
+public String sendCommand(String command) throws IOException {
+        out.println(command);
+        
+        if (command.startsWith("RESERVE")) {
+             return in.readLine();
+        }
+        return null;   
+}
+    
+ public String receiveMultiLineResponse() throws IOException {
+        StringBuilder response = new StringBuilder();
+        String line;
+        line = in.readLine();
+        if (line == null) return "";
+        response.append(line).append("\n");
+        
+        if (line.contains("Available tickets:")) {
+            while(true){ 
+                
+                line = in.readLine(); 
+                if (line == null || line.isEmpty()) break; 
+                response.append(line).append("\n");
+            }
+        }
+        
+        
+        
+        return response.toString().trim();
+    }
+
+public void close() throws IOException {
+        if (socket != null && !socket.isClosed()) {
+            socket.close();
+        }
+    }
+}
