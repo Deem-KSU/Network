@@ -1,0 +1,99 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+ import java.io.*;
+import java.net.*;
+import java.util.*;
+
+public class ClientHandler implements Runnable {
+
+    private Socket client;                  
+    private BufferedReader in;              
+    private PrintWriter out;              
+    private TrainManager manager;         
+
+    
+    public ClientHandler(Socket client, TrainManager manager) throws IOException {
+        this.client = client;
+        this.manager = manager;
+        this.in = new BufferedReader(new InputStreamReader(client.getInputStream()));
+        this.out = new PrintWriter(client.getOutputStream(), true);
+    }
+
+
+    @Override
+    public void run() {
+        try {
+            out.println("Welcome to Train Reservation System!");
+            out.println("Commands: FIND <source> <destination> <day> <classType> | RESERVE <ticketId> | SHOWALL | EXIT");
+
+            String line;
+            while ((line = in.readLine()) != null) {
+                line = line.trim();
+                if (line.equalsIgnoreCase("exit")) {
+                    out.println("Goodbye!");
+                    break;
+                }
+
+                String[] parts = line.split("\\s+");
+                String command = parts[0].toUpperCase();
+              
+                switch (command) {
+                    case "FIND":
+
+                        if (parts.length != 5) {
+                            out.println("Usage: FIND <source> <destination> <day> <classType>");
+                        } else {
+                            String source = parts[1];
+                            String destination = parts[2];
+                            int day = Integer.parseInt(parts[3]);
+                            String classType = parts[4];
+                            ArrayList<Ticket> found = manager.findAvailableTickets(source, destination, day, classType);
+                            if (found.isEmpty()) {
+                                out.println("No available tickets found.");
+                            } else {
+                                out.println("Available tickets:");
+                                for (Ticket t : found) {
+                                    out.println(t.toString());
+                                }
+                                out.println("");
+                            }
+                        }
+                        break;
+
+                    case "RESERVE":
+                        if (parts.length != 2) {
+                            out.println("Usage: RESERVE <ticketId>");
+                        } else {
+                            String ticketId = parts[1];
+                            boolean success = manager.reserveTicket(ticketId);
+                            if (success) {
+                                out.println("Ticket " + ticketId + " reserved successfully!");
+                            } else {
+                                out.println("Failed to reserve ticket (already reserved or not found).");
+                            }
+                        }
+                        break;
+
+                       default:
+                        out.println("Unknown command. Try FIND, RESERVE, SHOWALL, or EXIT.");
+                        break;
+                }
+            }
+
+        } catch (IOException e) {
+            System.out.println("Client disconnected: " + client.getInetAddress());
+        } finally {
+        
+
+            try {
+                client.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
