@@ -1,0 +1,54 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.mycompany.pingtrip;
+import java.io.*; 
+import java.net.*; 
+  
+// Server class 
+class Server{ 
+    public static void main(String[] args) 
+    { 
+        ServerSocket server = null; 
+  
+        try { 
+  
+           
+            server = new ServerSocket(1234); 
+            server.setReuseAddress(true); 
+   TrainManager manager= new TrainManager();
+           
+            while (true) { 
+  
+                
+                Socket client = server.accept(); 
+               
+                
+                System.out.println("New client connected"
+                                   + client.getInetAddress() 
+                                         .getHostAddress()); 
+  
+               
+                ClientHandler clientSock 
+                    = new ClientHandler(client,manager); 
+  
+                
+                new Thread(clientSock).start(); 
+            } 
+        } 
+        catch (IOException e) { 
+            e.printStackTrace(); 
+        } 
+        finally { 
+            if (server != null) { 
+                try { 
+                    server.close(); 
+                } 
+                catch (IOException e) { 
+                    e.printStackTrace(); 
+                } 
+            } 
+        } 
+    } 
+}
